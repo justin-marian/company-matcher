@@ -5,8 +5,7 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
-from sentence_transformers import SentenceTransformer
-from sklearn.metrics.pairwise import cosine_similarity
+from rapidfuzz import fuzz
 
 from backend.app.services.models import QueryIntent
 
@@ -16,19 +15,18 @@ FIELD_WEIGHTS = {
     "industry": 0.30,
     "offerings": 0.20,
     "description": 0.15,
-    "location": 0.05,
+    "location": 0.05
 }
 
 
 def rank_companies(
     df: pd.DataFrame,
     intent: QueryIntent,
-    embedder: SentenceTransformer,
     top_k: int,
-    semantic_weight: float = 0.70,
-    lexical_weight: float = 0.30,
+    semantic_weight: float = 0.55,
+    lexical_weight: float = 0.45
 ) -> pd.DataFrame:
-    """Rank candidates with a blended semantic and weighted lexical score."""
+    """Rank candidates with a lightweight fuzzy semantic score plus weighted lexical scoring."""
 
     if df.empty:
         return df.copy()
@@ -47,15 +45,12 @@ def rank_companies(
     ranked["company_text"] = company_texts
     ranked["field_map"] = field_maps
 
-    query_vector = embedder.encode([intent.semantic_query], show_progress_bar=False, normalize_embeddings=True)
-    company_vectors = embedder.encode(company_texts, batch_size=64, show_progress_bar=False, normalize_embeddings=True)
-
-    raw_embed_score = cosine_similarity(query_vector, company_vectors)[0]
-    embed_score = minmax_normalize(raw_embed_score)
+    query_text = intent.semantic_query
+    fuzzy_score = ranked["company_text"].apply(lambda text: fuzzy_semantic_score(query_text, text))
     lexical_score = ranked["field_map"].apply(lambda fields: weighted_lexical_score(fields, intent))
 
-    ranked["_embed_score_raw"] = raw_embed_score
-    ranked["_embed_score"] = embed_score
+    ranked["_embed_score_raw"] = fuzzy_score
+    ranked["_embed_score"] = fuzzy_score
     ranked["_lexical_score"] = lexical_score
     ranked["_rank_score"] = semantic_weight * ranked["_embed_score"] + lexical_weight * ranked["_lexical_score"]
 
@@ -63,8 +58,22 @@ def rank_companies(
     return ranked.head(top_k).drop(columns=["company_text", "field_map"], errors="ignore").copy()
 
 
+def fuzzy_semantic_score(query_text: str, company_text: str) -> float:
+    """Approximate semantic matching with normalized fuzzy string scores."""
+
+    query = normalize_text(query_text)
+    company = normalize_text(company_text)
+    if not query or not company:
+        return 0.0
+
+    token_set = fuzz.token_set_ratio(query, company) / 100.0
+    token_sort = fuzz.token_sort_ratio(query, company) / 100.0
+    partial = fuzz.partial_ratio(query, company) / 100.0
+    return 0.45 * token_set + 0.35 * token_sort + 0.20 * partial
+
+
 def build_company_profile(row: pd.Series) -> tuple[str, dict[str, str]]:
-    """Build the text used for embeddings and the field map used for lexical scoring."""
+    """Build ranking text and field map from the most informative company fields."""
 
     name = safe_text(row.get("operational_name"))
     description = safe_text(row.get("description"))
@@ -98,7 +107,7 @@ def build_company_profile(row: pd.Series) -> tuple[str, dict[str, str]]:
         "industry": f"{primary} {secondary}".strip(),
         "offerings": offerings,
         "description": description,
-        "location": location,
+        "location": location
     }
     return " | ".join(parts), fields
 

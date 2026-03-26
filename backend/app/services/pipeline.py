@@ -7,7 +7,6 @@ from pathlib import Path
 from typing import Any
 
 import anthropic
-from sentence_transformers import SentenceTransformer
 
 from backend.app.services.company_qualifier import qualify_candidates
 from backend.app.services.data_store import initialize_database, load_companies
@@ -21,13 +20,12 @@ class QualificationPipeline:
     """Run query analysis, deterministic filtering, ranking, and final qualification."""
 
     def __init__(self, settings: RuntimeSettings | None = None):
-        """Initialize all long-lived resources required by the pipeline."""
+        """Initialize long-lived pipeline resources without heavyweight embedding models."""
 
         self.settings = settings or RuntimeSettings()
         self.client = anthropic.Anthropic()
         self.conn: sqlite3.Connection | None = None
         self.df = load_companies(self.settings.data_path)
-        self.embedder = SentenceTransformer(self.settings.embed_model)
 
         if self.settings.use_sql:
             initialize_database(self.df, self.settings.db_path, self.settings.table_name, self.settings.rebuild_db)
@@ -43,7 +41,7 @@ class QualificationPipeline:
         if candidates.empty:
             return []
 
-        ranked = rank_companies(candidates, intent, self.embedder, top_k or self.settings.top_k)
+        ranked = rank_companies(candidates, intent, top_k or self.settings.top_k)
         if ranked.empty:
             return []
 
@@ -54,7 +52,7 @@ class QualificationPipeline:
             batch_size=self.settings.batch_size,
             max_concurrent=self.settings.max_concurrent,
             threshold=self.settings.qualify_threshold,
-            prompts_path=self.settings.prompts_path,
+            prompts_path=self.settings.prompts_path
         )
         results.sort(key=lambda item: (not item.matched, -item.llm_score, -item.embedding_score, -item.lexical_score))
         elapsed = time.time() - start_time
@@ -98,9 +96,9 @@ def print_results(query: str, results: list[QualifiedCompany], top_n: int = 10) 
         print(f"    Address   : {item.company.get('address') or 'N/A'}")
         print(f"    Employees : {item.company.get('employee_count') or 'N/A'}")
         print(f"    Revenue   : ${revenue:,.0f}" if revenue else "    Revenue   : N/A")
-        print(f"    LLM score : {item.llm_score}/10")
-        print(f"    Embed sim : {item.embedding_score:.4f}")
+        print(f"    Fuzzy sim : {item.embedding_score:.4f}")
         print(f"    Lexical   : {item.lexical_score:.4f}")
+        print(f"    LLM score : {item.llm_score}/10")
         print(f"    Reason    : {item.reason}")
 
     if unmatched:
@@ -114,7 +112,7 @@ def save_results(results_by_query: dict[str, list[QualifiedCompany]], output_pat
         query: {
             "matched_count": sum(item.matched for item in results),
             "evaluated_count": len(results),
-            "companies": [item.to_dict() for item in results if item.matched],
+            "companies": [item.to_dict() for item in results if item.matched]
         }
         for query, results in results_by_query.items()
     }
