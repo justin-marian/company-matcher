@@ -4,6 +4,4 @@ pydantic
 pydantic-settings
 python-dotenv
 anthropic
-numpy
-pandas
 rapidfuzz
