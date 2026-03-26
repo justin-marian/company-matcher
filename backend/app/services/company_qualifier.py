@@ -9,8 +9,8 @@ from typing import Any
 import anthropic
 import pandas as pd
 
-from app.services.models import QualifiedCompany, QueryIntent
-from app.services.query_analysis import read_prompt_section
+from backend.app.services.models import QualifiedCompany, QueryIntent
+from backend.app.services.query_analysis import read_prompt_section
 
 
 async def qualify_all(

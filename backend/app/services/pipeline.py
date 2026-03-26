@@ -9,12 +9,12 @@ from typing import Any
 import anthropic
 from sentence_transformers import SentenceTransformer
 
-from app.services.company_qualifier import qualify_candidates
-from app.services.data_store import initialize_database, load_companies
-from app.services.hard_filters import apply_hard_filters, fetch_filtered_candidates
-from app.services.models import QualifiedCompany, QueryIntent, RuntimeSettings
-from app.services.query_analysis import analyze_query
-from app.services.semantic_ranker import rank_companies
+from backend.app.services.company_qualifier import qualify_candidates
+from backend.app.services.data_store import initialize_database, load_companies
+from backend.app.services.hard_filters import apply_hard_filters, fetch_filtered_candidates
+from backend.app.services.models import QualifiedCompany, QueryIntent, RuntimeSettings
+from backend.app.services.query_analysis import analyze_query
+from backend.app.services.semantic_ranker import rank_companies
 
 
 class QualificationPipeline:

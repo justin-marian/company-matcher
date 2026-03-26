@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import threading
 
-from app.config import get_settings
-from app.services.models import RuntimeSettings
-from app.services.pipeline import QualificationPipeline
+from backend.app.config import get_settings
+from backend.app.services.models import RuntimeSettings
+from backend.app.services.pipeline import QualificationPipeline
 
 
 pipeline_instance: QualificationPipeline | None = None

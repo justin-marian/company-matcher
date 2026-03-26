@@ -8,7 +8,7 @@ import pandas as pd
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 
-from app.services.models import QueryIntent
+from backend.app.services.models import QueryIntent
 
 
 FIELD_WEIGHTS = {

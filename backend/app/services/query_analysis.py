@@ -7,7 +7,7 @@ from typing import Any
 
 import anthropic
 
-from app.services.models import QueryIntent
+from backend.app.services.models import QueryIntent
 
 
 REGION_TO_COUNTRIES: dict[str, list[str]] = {

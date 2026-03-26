@@ -6,7 +6,7 @@ from typing import Any
 
 import pandas as pd
 
-from app.services.models import QueryIntent
+from backend.app.services.models import QueryIntent
 
 
 COUNTRY_CODE_ALIASES = {
