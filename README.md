@@ -5,14 +5,13 @@ Design a system that determines whether a company truly satisfies a user query.
 Search systems typically retrieve many candidates that appear relevant, but these results are noisy. 
 The main difficulty is not retrieving candidates, but deciding which ones actually match the user’s intent.
 
->
-> ![INFO]
+> [!NOTE]
 > Example query: "Find logistics companies in Germany"
 
 A search system may return:
-- a freight forwarding company in Germany $\rightarrow$ clearly relevant  
-- a software company building logistics tools $\rightarrow$ partially related  
-- a foreign company operating near Germany $\rightarrow$ weak or irrelevant  
+- a freight forwarding company in Germany -> clearly relevant  
+- a software company building logistics tools -> partially related  
+- a foreign company operating near Germany -> weak or irrelevant  
 
 The problem is not retrieval, but qualification.
 
@@ -38,8 +37,7 @@ Company profiles are incomplete and heterogeneous.
 Some companies have detailed descriptions, others only minimal metadata.
 Some fields may be missing entirely.
 
->
-> ![WARNING]
+> [!WARNING]
 > The system cannot rely on any single field being present.
 
 This forces the system to:
@@ -96,16 +94,14 @@ LLM per company:
 - evaluates each company independently
 - provides strong reasoning
 
->
-> ![WARNING]
+> [!WARNING]
 > Does not scale, expensive, slow, and inconsistent on edge cases
 
 Embedding similarity:
 - compares vector representations
 - fast and scalable
 
->
-> ![WARNING]
+> [!WARNING]
 > Cannot distinguish role or intent, often confuses related concepts
 
 Example failure:
