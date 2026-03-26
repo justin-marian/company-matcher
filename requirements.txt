@@ -4,6 +4,7 @@ pydantic
 pydantic-settings
 python-dotenv
 anthropic
-sentence-transformers
+# sentence-transformers
 numpy
-pandas
+# pandas
+
